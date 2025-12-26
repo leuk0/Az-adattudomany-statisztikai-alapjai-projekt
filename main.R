@@ -59,7 +59,17 @@ colnames(data) <- c(
   "Class"
 )
 
+# Convert target from numerical to factor
 data$Class <- factor(data$Class,
                      levels = c(0, 1),
                      labels = c("No_DR", "DR"))
+
+str(data)
+
+# Class distribution
+table(data$Class)
+prop.table(table(data$Class))
+
+summary(data[, -which(names(data) == "Class")])
+
 
