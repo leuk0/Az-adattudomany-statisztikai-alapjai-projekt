@@ -86,3 +86,10 @@ cor_matrix <- cor(num_data)
 corrplot(cor_matrix,
          method = "color",
          tl.cex = 0.7)
+
+# PCA with standardization
+pca <- prcomp(num_data, scale. = TRUE)
+summary(pca)
+
+# Elbow point should be 3 or 4 (for this dataset)
+plot(pca, type = "l", main = "Scree plot")
