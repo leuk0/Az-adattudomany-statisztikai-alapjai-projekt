@@ -5,6 +5,8 @@ library(tidyverse)
 library(foreign)    # Needed because of ARFF file format
 library(corrplot)   # Needed to visualize correlation matrix
 library(factoextra) # Needed for 2D visualization for PC1 - PC2 and PC1 - PC3
+library(MASS)       # Needed to use LDA
+library(ggplot2)    # Needed for LDA visualization
 # library(plotly)   # Needed for 3D visualization after PCA for PC1, PC2 and PC3
 
 # The 'messidor_features.arff' file is downloadable from the following dataset: 
@@ -13,10 +15,12 @@ data <- read.arff("messidor_features.arff")
 
 
 # quality : 
-#   The binary result of quality assessment. 0 = bad quality 1 = sufficient quality.
+#   The binary result of quality assessment. 0 = bad quality 1 = sufficient 
+#   quality.
 # 
 # pre_screening : 
-#   The binary result of pre-screening, where 1 indicates severe retinal abnormality and 0 its lack.
+#   The binary result of pre-screening, where 1 indicates severe retinal 
+#   abnormality and 0 its lack.
 # 
 # ma1 - ma6 : 
 #   The results of MA detection. Each feature value stand for the number of MAs 
@@ -26,7 +30,8 @@ data <- read.arff("messidor_features.arff")
 #   exudate1 - exudate8 contain the same information as 2-7) for exudates. 
 #   However, as exudates are represented by a set of points rather than the 
 #   number of pixels constructing the lesions, these features are normalized by 
-#   dividing the number of lesions with the diameter of the ROI to compensate different image sizes.
+#   dividing the number of lesions with the diameter of the ROI to compensate 
+#   different image sizes.
 # 
 # macula_opticdisc_distance	:
 #   The euclidean distance of the center of the macula and the center of the 
@@ -131,4 +136,34 @@ fviz_pca_ind(pca,
 #         color = ~Class,
 #         type = "scatter3d",
 #         mode = "markers")
+
+
+# LDA without PCA
+lda_model <- lda(Class ~ ., data = data)
+lda_model
+
+# Classification
+lda_pred <- predict(lda_model)
+# str(lda_pred)
+
+
+# LDA confusion matrix (without PCA)
+# 
+#                  |  Actual No_DR   |   Actual DR     |
+# ------------------------------------------------------
+# Predicted No_DR  | True Negative   | False Negative  |
+# Predicted DR     | False Positive  | True Positive   |
+# ------------------------------------------------------
+table(Predicted = lda_pred$class,
+      Actual = data$Class)
+
+# New dataframe to visualize distribution of the discriminant function for LDA
+lda_df <- data.frame(
+  LD1 = lda_pred$x[,1],
+  Class = data$Class)
+
+# Distribution of the discriminant function for LDA (without PCA)
+ggplot(lda_df, aes(x = LD1, fill = Class)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "LDA - Distribution of the discriminant function")
 
