@@ -1,5 +1,6 @@
 library(tidyverse)
-library(foreign) # Needed because of ARFF file format
+library(foreign)    # Needed because of ARFF file format
+library(corrplot)   # Needed to visualize correlation matrix
 
 # The 'messidor_features.arff' file is downloadable from the following dataset: 
 # https://archive.ics.uci.edu/dataset/329/diabetic+retinopathy+debrecen
@@ -64,12 +65,24 @@ data$Class <- factor(data$Class,
                      levels = c(0, 1),
                      labels = c("No_DR", "DR"))
 
-str(data)
+# Check column types (Class must be 'Factor'), also the first 6 rows
+# str(data)
+# head(data)
 
-# Class distribution
+# Class distribution in exact numbers
 table(data$Class)
+
+# Class distribution in percentage
 prop.table(table(data$Class))
 
+# Basic statistics
 summary(data[, -which(names(data) == "Class")])
 
+# 'num_data' is the same as 'data', but without the target (Class)
+num_data <- data[, -which(names(data) == "Class")]
 
+
+cor_matrix <- cor(num_data)
+corrplot(cor_matrix,
+         method = "color",
+         tl.cex = 0.7)
