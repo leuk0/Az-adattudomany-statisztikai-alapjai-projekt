@@ -1,6 +1,11 @@
+# install.packages(c("tidyverse", "foreign", "corrplot", "factoextra"))
+# install.packages("plotly")
+
 library(tidyverse)
 library(foreign)    # Needed because of ARFF file format
 library(corrplot)   # Needed to visualize correlation matrix
+library(factoextra) # Needed for 2D visualization for PC1 - PC2 and PC1 - PC3
+# library(plotly)   # Needed for 3D visualization after PCA for PC1, PC2 and PC3
 
 # The 'messidor_features.arff' file is downloadable from the following dataset: 
 # https://archive.ics.uci.edu/dataset/329/diabetic+retinopathy+debrecen
@@ -60,14 +65,17 @@ colnames(data) <- c(
   "Class"
 )
 
+
 # Convert target from numerical to factor
 data$Class <- factor(data$Class,
                      levels = c(0, 1),
                      labels = c("No_DR", "DR"))
 
+
 # Check column types (Class must be 'Factor'), also the first 6 rows
 # str(data)
 # head(data)
+
 
 # Class distribution in exact numbers
 table(data$Class)
@@ -78,14 +86,15 @@ prop.table(table(data$Class))
 # Basic statistics
 summary(data[, -which(names(data) == "Class")])
 
+
 # 'num_data' is the same as 'data', but without the target (Class)
 num_data <- data[, -which(names(data) == "Class")]
-
 
 cor_matrix <- cor(num_data)
 corrplot(cor_matrix,
          method = "color",
          tl.cex = 0.7)
+
 
 # PCA with standardization
 pca <- prcomp(num_data, scale. = TRUE)
@@ -93,3 +102,33 @@ summary(pca)
 
 # Elbow point should be 3 or 4 (for this dataset)
 plot(pca, type = "l", main = "Scree plot")
+
+
+# 2D visualization for PC1 - PC2 and PC1 - PC3
+fviz_pca_ind(pca,
+             axes = c(1, 2), # PC1 and PC2
+             geom.ind = "point",
+             col.ind = data$Class,
+             addEllipses = TRUE,
+             legend.title = "Class",
+             title = "Individuals - PC1 and PC2")
+
+fviz_pca_ind(pca,
+             axes = c(1, 3), # PC1 and PC3
+             geom.ind = "point",
+             col.ind = data$Class,
+             addEllipses = TRUE,
+             legend.title = "Class",
+             title = "Individuals - PC1 and PC3")
+
+# 3D visualization for PC1, PC2 and PC3
+# pca_scores <- as.data.frame(pca$x[, 1:3])
+# pca_scores$Class <- data$Class
+# plot_ly(pca_scores,
+#         x = ~PC1,
+#         y = ~PC2,
+#         z = ~PC3,
+#         color = ~Class,
+#         type = "scatter3d",
+#         mode = "markers")
+
