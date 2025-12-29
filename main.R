@@ -157,6 +157,7 @@ lda_pred <- predict(lda_model)
 table(Predicted = lda_pred$class,
       Actual = data$Class)
 
+
 # New dataframe to visualize distribution of the discriminant function for LDA
 lda_df <- data.frame(
   LD1 = lda_pred$x[,1],
@@ -167,3 +168,42 @@ ggplot(lda_df, aes(x = LD1, fill = Class)) +
   geom_density(alpha = 0.5) +
   labs(title = "LDA - Distribution of the discriminant function")
 
+
+# pca <- prcomp(num_data, scale. = TRUE) | Did this already
+# PCA (PC1-PC3) as a dataframe
+pca_scores <- as.data.frame(pca$x[, 1:3])
+
+# PCA with traget Class
+pca_scores$Class <- data$Class
+
+
+# LDA with PCA
+lda_pca_model <- lda(Class ~ ., data = pca_scores)
+lda_pca_model
+
+# Classification
+lda_pca_pred <- predict(lda_pca_model)
+# str(lda_pca_pred)
+
+
+# LDA confusion matrix (with PCA)
+# 
+#                  |  Actual No_DR   |   Actual DR     |
+# ------------------------------------------------------
+# Predicted No_DR  | True Negative   | False Negative  |
+# Predicted DR     | False Positive  | True Positive   |
+# ------------------------------------------------------
+table(Predicted = lda_pca_pred$class,
+      Actual = pca_scores$Class)
+
+
+# New dataframe to visualize distribution of the discriminant function for LDA
+lda_pca_df <- data.frame(
+  LD1 = lda_pca_pred$x[,1],
+  Class = pca_scores$Class
+)
+
+# Distribution of the discriminant function for LDA (with PCA)
+ggplot(lda_pca_df, aes(x = LD1, fill = Class)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "LDA with PCA - Distribution of the discriminant function")
