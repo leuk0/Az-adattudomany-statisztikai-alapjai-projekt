@@ -207,3 +207,32 @@ lda_pca_df <- data.frame(
 ggplot(lda_pca_df, aes(x = LD1, fill = Class)) +
   geom_density(alpha = 0.5) +
   labs(title = "LDA with PCA - Distribution of the discriminant function")
+
+
+# QDA (with PCA because of too many variable)
+qda_pca_model <- qda(Class ~ ., data = pca_scores)
+qda_pca_model
+
+qda_pca_pred <- predict(qda_pca_model)
+# str(qda_pca_pred)
+
+# QDA confusion matrix (with PCA)
+# 
+#                  |  Actual No_DR   |   Actual DR     |
+# ------------------------------------------------------
+# Predicted No_DR  | True Negative   | False Negative  |
+# Predicted DR     | False Positive  | True Positive   |
+# ------------------------------------------------------
+table(Predicted = qda_pca_pred$class,
+      Actual = pca_scores$Class)
+
+# New dataframe to visualize Posterior probability
+qda_pca_df <- data.frame(
+  Prob_DR = qda_pca_pred$posterior[, "DR"],
+  Class = pca_scores$Class
+)
+
+# QDA (with PCA)- Posterior probability of DR
+ggplot(qda_pca_df, aes(x = Prob_DR, fill = Class)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "QDA with PCA - Posterior probability of DR")
