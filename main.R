@@ -71,7 +71,7 @@ colnames(data) <- c(
 )
 
 
-# Convert target from numerical to factor
+# Convert target variable to factor for classification methods
 data$Class <- factor(data$Class,
                      levels = c(0, 1),
                      labels = c("No_DR", "DR"))
@@ -88,28 +88,32 @@ table(data$Class)
 # Class distribution in percentage
 prop.table(table(data$Class))
 
-# Basic statistics
+# Basic descriptive statistics for numerical variables
 summary(data[, -which(names(data) == "Class")])
 
 
 # 'num_data' is the same as 'data', but without the target (Class)
 num_data <- data[, -which(names(data) == "Class")]
 
+# Correlation analysis to examine relationships between variables
 cor_matrix <- cor(num_data)
+
+# Strong correlations indicate multicollinearity
 corrplot(cor_matrix,
          method = "color",
          tl.cex = 0.7)
 
 
-# PCA with standardization
+# Principal Component Analysis with standardization
 pca <- prcomp(num_data, scale. = TRUE)
 summary(pca)
 
 # Elbow point should be 3 or 4 (for this dataset)
+# Elbow suggests using the first 3 principal components
 plot(pca, type = "l", main = "Scree plot")
 
 
-# 2D visualization for PC1 - PC2 and PC1 - PC3
+# 2D visualization of the first two principal components
 fviz_pca_ind(pca,
              axes = c(1, 2), # PC1 and PC2
              geom.ind = "point",
@@ -118,6 +122,8 @@ fviz_pca_ind(pca,
              legend.title = "Class",
              title = "Individuals - PC1 and PC2")
 
+# Visualization including the third principal component 
+# (meaning the first and third)
 fviz_pca_ind(pca,
              axes = c(1, 3), # PC1 and PC3
              geom.ind = "point",
@@ -138,7 +144,7 @@ fviz_pca_ind(pca,
 #         mode = "markers")
 
 
-# LDA without PCA
+# Linear Discriminant Analysis for class separation (without PCA)
 lda_model <- lda(Class ~ ., data = data)
 lda_model
 
@@ -147,13 +153,12 @@ lda_pred <- predict(lda_model)
 # str(lda_pred)
 
 
+# Classification performance of LDA
 # LDA confusion matrix (without PCA)
 # 
 #                  |  Actual No_DR   |   Actual DR     |
-# ------------------------------------------------------
 # Predicted No_DR  | True Negative   | False Negative  |
 # Predicted DR     | False Positive  | True Positive   |
-# ------------------------------------------------------
 table(Predicted = lda_pred$class,
       Actual = data$Class)
 
@@ -177,7 +182,7 @@ pca_scores <- as.data.frame(pca$x[, 1:3])
 pca_scores$Class <- data$Class
 
 
-# LDA with PCA
+# LDA applied on PCA-reduced feature space (PC1-PC3)
 lda_pca_model <- lda(Class ~ ., data = pca_scores)
 lda_pca_model
 
@@ -185,14 +190,12 @@ lda_pca_model
 lda_pca_pred <- predict(lda_pca_model)
 # str(lda_pca_pred)
 
-
+# Classification performance of LDA (with PCA)
 # LDA confusion matrix (with PCA)
 # 
 #                  |  Actual No_DR   |   Actual DR     |
-# ------------------------------------------------------
 # Predicted No_DR  | True Negative   | False Negative  |
 # Predicted DR     | False Positive  | True Positive   |
-# ------------------------------------------------------
 table(Predicted = lda_pca_pred$class,
       Actual = pca_scores$Class)
 
@@ -209,20 +212,19 @@ ggplot(lda_pca_df, aes(x = LD1, fill = Class)) +
   labs(title = "LDA with PCA - Distribution of the discriminant function")
 
 
-# QDA (with PCA because of too many variable)
+# QDA applied after PCA due to high dimensionality
 qda_pca_model <- qda(Class ~ ., data = pca_scores)
 qda_pca_model
 
 qda_pca_pred <- predict(qda_pca_model)
 # str(qda_pca_pred)
 
+# Classification performance of QDA (with PCA)
 # QDA confusion matrix (with PCA)
 # 
 #                  |  Actual No_DR   |   Actual DR     |
-# ------------------------------------------------------
 # Predicted No_DR  | True Negative   | False Negative  |
 # Predicted DR     | False Positive  | True Positive   |
-# ------------------------------------------------------
 table(Predicted = qda_pca_pred$class,
       Actual = pca_scores$Class)
 
@@ -232,7 +234,7 @@ qda_pca_df <- data.frame(
   Class = pca_scores$Class
 )
 
-# QDA (with PCA)- Posterior probability of DR
+# Posterior probability distribution for DR class
 ggplot(qda_pca_df, aes(x = Prob_DR, fill = Class)) +
   geom_density(alpha = 0.5) +
   labs(title = "QDA with PCA - Posterior probability of DR")
